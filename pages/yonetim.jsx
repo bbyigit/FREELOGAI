@@ -9,16 +9,16 @@ export default function Yonetim() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   
-  // İki farklı veri seti tutuyoruz
+  // Veriler
   const [jobs, setJobs] = useState([]);
   const [trucks, setTrucks] = useState([]);
 
-  // Sekme Kontrolü (Jobs veya Trucks)
-  const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' veya 'trucks'
+  // Sekme Kontrolü
+  const [activeTab, setActiveTab] = useState('jobs'); 
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (password === '123456') { // Şifren burada
+    if (password === '1234') { // Şifreyi 1234 olarak güncelledim, diğerleriyle uyumlu olsun
       setIsAuthenticated(true);
     } else {
       alert("Hatalı Şifre!");
@@ -61,122 +61,157 @@ export default function Yonetim() {
   // --- ZAMAN FORMATLAYICI ---
   const formatTime = (timestamp) => {
     if (!timestamp) return "Bilinmiyor";
-    return new Date(timestamp.seconds * 1000).toLocaleString('tr-TR');
+    // Firestore Timestamp objesi mi kontrolü
+    const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
+    return date.toLocaleString('tr-TR', { 
+        hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' 
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Head><title>Freelog - Yönetim Merkezi</title></Head>
+    <div className="min-h-screen bg-[#0a192f] font-sans text-slate-200 selection:bg-orange-500 selection:text-white flex flex-col">
+      <Head><title>Operasyon Yönetimi | Freelog</title></Head>
+      
+      {/* Navbar Fixed */}
       <Navbar />
 
-      <main className="flex-grow container mx-auto py-10 px-4">
+      {/* KRAL AYAR: Navbar çakışmasını önlemek için padding */}
+      <main 
+        className="flex-grow container mx-auto px-4 flex justify-center items-start"
+        style={{ paddingTop: '150px', paddingBottom: '50px' }}
+      >
         
         {!isAuthenticated ? (
-          <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg mt-20 text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Yönetici Girişi</h2>
+          /* --- GİRİŞ EKRANI (DARK MODE) --- */
+          <div className="bg-[#112240] p-10 rounded-2xl shadow-2xl w-full max-w-md text-center border border-slate-700 mt-10">
+            <div className="mb-6 text-5xl animate-bounce">🛡️</div>
+            <h2 className="text-xl font-bold text-white mb-2 tracking-widest uppercase">Yönetim Paneli</h2>
+            <p className="text-slate-400 text-xs mb-8 font-mono">Yetkili erişimi gereklidir.</p>
+            
             <form onSubmit={handleLogin} className="space-y-4">
               <input 
-                type="password" placeholder="Şifre"
-                className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:border-blue-500"
+                type="password" placeholder="GÜVENLİK KODU"
+                className="w-full px-4 py-3 bg-[#0a192f] border border-slate-600 rounded-lg text-orange-500 font-mono text-center tracking-[0.5em] focus:border-orange-500 focus:outline-none transition font-bold"
                 value={password} onChange={(e) => setPassword(e.target.value)}
+                autoFocus
               />
-              <button type="submit" className="w-full bg-blue-900 text-white font-bold py-3 rounded-lg hover:bg-blue-800 transition">
+              <button type="submit" className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-lg border border-slate-600 transition font-mono text-sm">
                 GİRİŞ YAP
               </button>
             </form>
           </div>
         ) : (
           
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden min-h-[600px]">
-            {/* --- ÜST SEKMELER (TABS) --- */}
-            <div className="flex border-b">
+          /* --- YÖNETİM PANELİ İÇERİĞİ --- */
+          <div className="w-full max-w-5xl">
+            
+            {/* ÜST BAŞLIK */}
+            <div className="flex justify-between items-end mb-8 border-b border-slate-700 pb-4">
+               <div>
+                 <h1 className="text-3xl font-bold text-white mb-1">Operasyon Merkezi</h1>
+                 <p className="text-slate-400 text-sm">Veritabanı ve filo yönetimi.</p>
+               </div>
+               <div className="flex gap-2">
+                  <span className="px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/30 rounded text-xs font-mono">DB: ONLINE</span>
+               </div>
+            </div>
+
+            {/* SEKMELER (TABS) */}
+            <div className="flex gap-4 mb-8">
               <button 
                 onClick={() => setActiveTab('jobs')}
-                className={`flex-1 py-4 text-center font-bold text-lg transition ${activeTab === 'jobs' ? 'bg-blue-50 text-blue-900 border-b-4 border-blue-900' : 'text-gray-500 hover:bg-gray-50'}`}
+                className={`flex-1 py-4 rounded-xl border font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-3
+                ${activeTab === 'jobs' 
+                  ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)]' 
+                  : 'bg-[#112240] border-slate-700 text-slate-400 hover:bg-slate-800'}`}
               >
-                📋 Yük Havuzu ({jobs.length})
+                <span>📋</span> YÜK HAVUZU <span className="bg-slate-900 px-2 py-0.5 rounded text-xs ml-2">{jobs.length}</span>
               </button>
+              
               <button 
                 onClick={() => setActiveTab('trucks')}
-                className={`flex-1 py-4 text-center font-bold text-lg transition ${activeTab === 'trucks' ? 'bg-orange-50 text-orange-600 border-b-4 border-orange-500' : 'text-gray-500 hover:bg-gray-50'}`}
+                className={`flex-1 py-4 rounded-xl border font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-3
+                ${activeTab === 'trucks' 
+                  ? 'bg-orange-600/20 border-orange-500 text-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.3)]' 
+                  : 'bg-[#112240] border-slate-700 text-slate-400 hover:bg-slate-800'}`}
               >
-                🚛 Aktif Araçlar ({trucks.length})
+                <span>🚛</span> AKTİF FİLO <span className="bg-slate-900 px-2 py-0.5 rounded text-xs ml-2">{trucks.length}</span>
               </button>
             </div>
 
-            {/* --- İÇERİK ALANI --- */}
-            <div className="p-6">
+            {/* --- İÇERİK LİSTESİ --- */}
+            <div className="space-y-4">
               
-              {/* TAB 1: İŞ İLANLARI */}
+              {/* TAB 1: İŞ İLANLARI LİSTESİ */}
               {activeTab === 'jobs' && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="bg-gray-100 text-gray-700 uppercase font-bold">
-                      <tr>
-                        <th className="px-6 py-3">Başlık</th>
-                        <th className="px-6 py-3">Rota</th>
-                        <th className="px-6 py-3">Fiyat</th>
-                        <th className="px-6 py-3 text-center">İşlem</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {jobs.map((job) => (
-                        <tr key={job.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 font-medium">{job.title}</td>
-                          <td className="px-6 py-4">{job.pickupName} ➔ {job.destName}</td>
-                          <td className="px-6 py-4 text-green-600 font-bold">{job.price}</td>
-                          <td className="px-6 py-4 text-center">
-                            <button onClick={() => handleDeleteJob(job.id)} className="text-red-500 hover:text-red-700 font-bold">SİL</button>
-                          </td>
-                        </tr>
-                      ))}
-                      {jobs.length === 0 && <tr><td colSpan="4" className="text-center py-10 text-gray-400">İlan yok.</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
+                <>
+                  {jobs.length === 0 ? (
+                    <div className="text-center py-20 text-slate-500 border border-dashed border-slate-700 rounded-xl">Havuzda aktif iş bulunmuyor.</div>
+                  ) : (
+                    jobs.map((job) => (
+                      <div key={job.id} className="bg-[#112240] border border-slate-700 p-5 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 hover:border-blue-500 transition group">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition">{job.title}</h3>
+                          <div className="flex items-center gap-2 text-sm text-slate-400 mt-1">
+                             <span className="text-blue-300">A: {job.pickupName}</span> 
+                             <span className="text-slate-600">➔</span> 
+                             <span className="text-orange-300">B: {job.destName}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-6">
+                           <div className="text-right">
+                              <div className="text-lg font-bold text-green-400">{job.price}</div>
+                              <div className="text-xs text-slate-500 font-mono">{job.distance} • {job.tonnage}</div>
+                           </div>
+                           <button onClick={() => handleDeleteJob(job.id)} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/30 p-3 rounded-lg transition">
+                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                           </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </>
               )}
 
-              {/* TAB 2: AKTİF ARAÇLAR (Senin İstediğin Kısım) */}
+              {/* TAB 2: AKTİF ARAÇLAR LİSTESİ */}
               {activeTab === 'trucks' && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="bg-orange-50 text-orange-800 uppercase font-bold">
-                      <tr>
-                        <th className="px-6 py-3">Plaka (ID)</th>
-                        <th className="px-6 py-3">Son Durum</th>
-                        <th className="px-6 py-3">Hız</th>
-                        <th className="px-6 py-3">Son Sinyal</th>
-                        <th className="px-6 py-3 text-center">İşlem</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {trucks.map((truck) => (
-                        <tr key={truck.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 font-bold text-blue-900">{truck.truckId}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-1 rounded text-xs font-bold text-white
-                              ${truck.status === 'FULL' ? 'bg-blue-600' : 
-                                truck.status === 'SOS' ? 'bg-red-600' : 
-                                truck.status === 'GOING_TO_PICKUP' ? 'bg-purple-600' : 'bg-yellow-500'}`}>
+                <>
+                  {trucks.length === 0 ? (
+                    <div className="text-center py-20 text-slate-500 border border-dashed border-slate-700 rounded-xl">Haritada aktif araç yok.</div>
+                  ) : (
+                    trucks.map((truck) => (
+                      <div key={truck.id} className="bg-[#112240] border border-slate-700 p-5 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 hover:border-orange-500 transition group">
+                        
+                        <div className="flex items-center gap-4 flex-1">
+                           <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-xl">🚛</div>
+                           <div>
+                              <h3 className="text-lg font-bold text-white font-mono group-hover:text-orange-400 transition">{truck.id || truck.truckId}</h3>
+                              <p className="text-xs text-slate-500 font-mono">Son Sinyal: {formatTime(truck.updatedAt || truck.timestamp)}</p>
+                           </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                           <span className={`px-3 py-1 rounded text-xs font-bold border tracking-wider
+                              ${truck.status === 'FULL' ? 'bg-blue-900/30 border-blue-500 text-blue-400' : 
+                                truck.status === 'SOS' ? 'bg-red-900/30 border-red-500 text-red-500 animate-pulse' : 
+                                truck.status === 'GOING_TO_PICKUP' ? 'bg-purple-900/30 border-purple-500 text-purple-400' : 
+                                'bg-yellow-900/30 border-yellow-500 text-yellow-500'}`}>
                               {truck.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">{truck.speed ? truck.speed.toFixed(1) : 0} km/s</td>
-                          <td className="px-6 py-4 text-gray-500">{formatTime(truck.updatedAt)}</td>
-                          <td className="px-6 py-4 text-center">
-                            <button 
-                              onClick={() => handleDeleteTruck(truck.id)} 
-                              className="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-3 py-1 rounded transition font-bold text-xs"
-                            >
-                              HARİTADAN AT
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {trucks.length === 0 && <tr><td colSpan="5" className="text-center py-10 text-gray-400">Aktif araç yok.</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
+                           </span>
+                           
+                           <div className="text-right w-24">
+                              <div className="text-lg font-bold text-white">{truck.speed ? truck.speed.toFixed(0) : 0} <span className="text-xs font-normal text-slate-500">KM/S</span></div>
+                           </div>
+
+                           <button onClick={() => handleDeleteTruck(truck.id)} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/30 px-4 py-2 rounded-lg transition text-xs font-bold">
+                             AT
+                           </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </>
               )}
 
             </div>
