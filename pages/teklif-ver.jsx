@@ -87,17 +87,13 @@ export default function TeklifVer() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
+    // KRAL AYAR: Arka plan #0a192f (Lacivert), yazı rengi açık gri, selection turuncu
+    <div className="min-h-screen bg-[#0a192f] font-sans text-slate-200 flex flex-col selection:bg-orange-500 selection:text-white">
       <Head><title>Yük Havuzu Yönetimi | Freelog</title></Head>
 
-      {/* Navbar Fixed olduğu için yer kaplamaz, üstte yüzer */}
       <Navbar />
 
-      {/* KRAL DİKKAT: 
-          Buraya 'style={{ paddingTop: '150px' }}' ekledim.
-          Bu, CSS sınıflarını ezer ve zorla yukarıdan 150 piksel boşluk bıraktırır.
-          Navbar yaklaşık 100px olduğu için, 150px onu rahat rahat kurtarır.
-      */}
+      {/* Padding ayarı korundu */}
       <main 
         className="flex-grow container mx-auto px-4 flex justify-center items-start"
         style={{ paddingTop: '150px', paddingBottom: '50px' }}
@@ -105,10 +101,14 @@ export default function TeklifVer() {
         
         {/* --- 1. GÜVENLİK EKRANI --- */}
         {!isAuthenticated ? (
-           <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md text-center border border-slate-200">
-             <div className="mb-6 text-5xl">🔐</div>
-             {/* Bu başlığı değiştirdim, dosyanın güncellendiğini buradan anlayabilirsin */}
-             <h2 className="text-xl font-bold text-slate-800 mb-2">Yönetici Girişi (Güvenli)</h2>
+           // Kart beyaz kalıyor ama gölge (shadow) artık koyu zemine uygun hale getirildi
+           <div className="bg-white p-10 rounded-2xl shadow-2xl shadow-blue-900/50 w-full max-w-md text-center border border-slate-200 relative overflow-hidden">
+             
+             {/* Üst Dekor Çizgisi */}
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-cyan-500"></div>
+
+             <div className="mb-6 text-5xl animate-bounce">🔐</div>
+             <h2 className="text-xl font-bold text-slate-800 mb-2">Yönetici Paneli</h2>
              <p className="text-slate-500 text-sm mb-8">İş emri oluşturmak için güvenlik kodunu giriniz.</p>
              
              <form onSubmit={handleLogin} className="space-y-4">
@@ -117,14 +117,14 @@ export default function TeklifVer() {
                  value={passwordInput}
                  onChange={(e) => setPasswordInput(e.target.value)}
                  placeholder="Güvenlik Kodu"
-                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-center tracking-[0.5em] focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition font-bold"
+                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-center tracking-[0.5em] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition font-bold"
                  autoFocus
                />
-               {loginError && <p className="text-red-600 text-xs font-bold">Hatalı Kod</p>}
+               {loginError && <p className="text-red-600 text-xs font-bold animate-pulse">⚠️ Hatalı Kod</p>}
                
                <button 
                  type="submit"
-                 className="w-full bg-[#0a192f] hover:bg-[#112240] text-white font-bold py-3 rounded-lg transition shadow-lg"
+                 className="w-full bg-[#0a192f] hover:bg-[#152a4d] text-white font-bold py-3 rounded-lg transition shadow-lg transform active:scale-[0.98]"
                >
                  GİRİŞ YAP
                </button>
@@ -132,18 +132,20 @@ export default function TeklifVer() {
            </div>
         ) : (
           /* --- 2. VERİ GİRİŞ FORMU --- */
-          <div className="w-full max-w-4xl bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 relative">
+          // Form beyaz, arka plan koyu. Kontrast mükemmel.
+          <div className="w-full max-w-4xl bg-white p-8 md:p-12 rounded-2xl shadow-2xl shadow-black/50 border border-slate-300 relative">
             
+            {/* Turuncu-Kırmızı Gradient Çizgi */}
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-t-2xl"></div>
 
             <div className="mb-10 border-b border-slate-100 pb-6 flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
                   📋 Yeni İş Emri
                 </h1>
                 <p className="text-slate-500 text-sm mt-1">Lütfen taşıma detaylarını eksiksiz giriniz.</p>
               </div>
-              <div className="bg-green-50 text-green-700 px-4 py-1.5 rounded-full border border-green-200 text-xs font-bold flex items-center gap-2">
+              <div className="bg-green-50 text-green-700 px-4 py-1.5 rounded-full border border-green-200 text-xs font-bold flex items-center gap-2 shadow-sm">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 SİSTEM AKTİF
               </div>

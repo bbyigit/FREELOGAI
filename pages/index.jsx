@@ -2,28 +2,33 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
-import { useRouter } from 'next/router'; // Router eklendi
+import { useRouter } from 'next/router';
 import Footer from '../components/Footer'
 
 export default function Home() {
   const [loading, setLoading] = useState(true)
   const [progress, setProgress] = useState(0)
   const [loadingText, setLoadingText] = useState("SİSTEM BAŞLATILIYOR...")
+  
+  // Canlı İstatistikler İçin State
+  const [stats, setStats] = useState({
+    partners: 0,
+    drivers: 0,
+    routes: 0,
+    tonnage: 0
+  });
 
-  const router = useRouter(); // Router tanımlandı
+  const router = useRouter(); 
 
   // --- SİNEMATİK INTRO VE SKIP MANTIĞI ---
   useEffect(() => {
-    // 1. Router hazır olana kadar bekle
     if (!router.isReady) return;
 
-    // 2. Eğer URL'de ?skip=true varsa animasyonu ATLA
     if (router.query.skip === 'true') {
       setLoading(false);
       return;
     }
 
-    // 3. Skip yoksa animasyonu oynat
     const texts = [
       "UYDU BAĞLANTISI KURULUYOR...",
       "VERİ TABANI SENKRONİZE EDİLİYOR...",
@@ -49,18 +54,48 @@ export default function Home() {
     }, 40)
 
     return () => clearInterval(interval)
-  }, [router.isReady, router.query]) // Dependency array güncellendi
+  }, [router.isReady, router.query])
 
-  // --- INTRO EKRANI (LOGO EKLENDİ) ---
+  // --- İSTATİSTİK SAYACI EFEKTİ (Intro bittikten sonra çalışır) ---
+  useEffect(() => {
+    if (loading) return;
+
+    // Hedef Sayılar
+    const targets = { partners: 42, drivers: 850, routes: 12400, tonnage: 35000 };
+    
+    const duration = 2000; // 2 saniyede tamamlansın
+    const steps = 50; 
+    const intervalTime = duration / steps;
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps; // 0.0 -> 1.0
+
+      // Easing fonksiyonu (yavaşça durması için)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      setStats({
+        partners: Math.floor(targets.partners * easeOut),
+        drivers: Math.floor(targets.drivers * easeOut),
+        routes: Math.floor(targets.routes * easeOut),
+        tonnage: Math.floor(targets.tonnage * easeOut)
+      });
+
+      if (currentStep >= steps) clearInterval(timer);
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, [loading]);
+
+
+  // --- INTRO EKRANI ---
   if (loading) {
     return (
       <div className="fixed inset-0 bg-[#0a192f] z-[100] flex flex-col items-center justify-center font-mono text-orange-500">
         
-        {/* LOGO ALANI */}
         <div className="mb-6 relative animate-pulse">
-           {/* Logo Arkasındaki Glow Efekti */}
            <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-20 rounded-full"></div>
-           {/* Logo Görseli */}
            <img 
               src="/images/logo.png" 
               alt="Freelog Logo" 
@@ -68,7 +103,6 @@ export default function Home() {
            />
         </div>
         
-        {/* PROGRESS BAR */}
         <div className="w-80 h-1 bg-slate-800 rounded-full overflow-hidden relative border border-slate-700">
           <div 
             className="h-full bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-400 shadow-[0_0_20px_rgba(249,115,22,1)] transition-all duration-75 ease-out"
@@ -76,7 +110,6 @@ export default function Home() {
           ></div>
         </div>
         
-        {/* YAZILAR */}
         <div className="mt-4 flex justify-between w-80 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
           <span className="animate-pulse">{loadingText}</span>
           <span className="text-orange-500">%{progress}</span>
@@ -84,6 +117,9 @@ export default function Home() {
       </div>
     )
   }
+
+  // Sayı Formatlayıcı (12.400 gibi)
+  const formatNum = (num) => new Intl.NumberFormat('tr-TR').format(num);
 
   return (
     <div className="min-h-screen bg-[#0a192f] font-sans text-slate-200 selection:bg-orange-500 selection:text-white overflow-x-hidden">
@@ -97,7 +133,7 @@ export default function Home() {
       </div>
 
       {/* --- HERO SECTION --- */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20">
         
         <div className="absolute inset-0 z-0">
           {/* HERO ARKAPLAN GÖRSELİ */}
@@ -110,9 +146,10 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0a192f_100%)]"></div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10 pt-20 text-center">
+        <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
           
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-orange-500/20 bg-orange-500/5 backdrop-blur-md mb-8 animate-fade-in-up">
+          {/* Rozeti biraz aşağı kaydırdık (mt-12) */}
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-orange-500/20 bg-orange-500/5 backdrop-blur-md mb-8 mt-12 animate-fade-in-up">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
@@ -127,12 +164,13 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="text-lg md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 font-light leading-relaxed animate-fade-in-up delay-200">
+          <p className="text-lg md:text-2xl text-slate-400 max-w-3xl mx-auto mb-10 font-light leading-relaxed animate-fade-in-up delay-200">
             Gerçek zamanlı veri, tam görünürlük ve uçtan uca <strong className="text-white">lojistik orkestrasyonu.</strong><br/>
             Kaosu matematiğe çeviriyoruz.
           </p>
 
-          <div className="flex justify-center animate-fade-in-up delay-300">
+          {/* BUTON */}
+          <div className="flex justify-center mb-16 animate-fade-in-up delay-300">
             <Link href="/demo" className="group relative w-72 h-16 bg-gradient-to-r from-orange-700 to-orange-600 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(234,88,12,0.4)] hover:shadow-[0_0_50px_rgba(234,88,12,0.7)] transition-all duration-500">
               <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)] animate-slide-bg"></div>
               <div className="absolute top-0 -left-full w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg] animate-shine"></div>
@@ -148,12 +186,53 @@ export default function Home() {
               </div>
             </Link>
           </div>
+
+          {/* --- YENİ EKLENEN CANLI İSTATİSTİK SATIRI --- */}
+          <div className="w-full max-w-5xl animate-fade-in-up delay-500">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-t border-white/10 pt-8 pb-4">
+               
+               {/* Stat 1 */}
+               <div className="flex flex-col items-center group cursor-default">
+                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-orange-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                     {formatNum(stats.partners)}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Lojistik Partneri</div>
+               </div>
+
+               {/* Stat 2 */}
+               <div className="flex flex-col items-center group cursor-default border-l border-white/5">
+                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-blue-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                     {formatNum(stats.drivers)}+
+                  </div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Aktif Sürücü</div>
+               </div>
+
+               {/* Stat 3 */}
+               <div className="flex flex-col items-center group cursor-default border-l border-white/5">
+                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-green-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                     {formatNum(stats.routes)}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Tamamlanan Rota</div>
+               </div>
+
+               {/* Stat 4 */}
+               <div className="flex flex-col items-center group cursor-default border-l border-white/5">
+                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-purple-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                     {formatNum(stats.tonnage)}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Anlık Yük (Ton)</div>
+               </div>
+
+            </div>
+          </div>
+
         </div>
         
+        {/* Alt Fade Efekti */}
         <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-[#0a192f] to-transparent z-20"></div>
       </section>
 
-      {/* --- PROJENİN GERÇEK GÜÇLERİ (FOTOĞRAFLI KARTLAR - REVİZE EDİLDİ) --- */}
+      {/* --- PROJENİN GERÇEK GÜÇLERİ (FOTOĞRAFLI KARTLAR) --- */}
       <section className="py-24 bg-[#0a192f] relative">
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-3 gap-12">
@@ -161,7 +240,6 @@ export default function Home() {
             {/* KART 1: GERÇEK ZAMANLI VERİ */}
             <div className="group relative p-1 rounded-2xl bg-gradient-to-b from-white/10 to-transparent hover:from-orange-500/50 transition duration-500 h-full">
               <div className="bg-[#112240] p-8 rounded-xl h-full relative overflow-hidden">
-                {/* ARKA PLAN FOTOĞRAFI */}
                 <img 
                   src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=2070&auto=format&fit=crop" 
                   alt="Data Highway Speed" 
@@ -299,6 +377,17 @@ export default function Home() {
         @keyframes zoom { from { transform: scale(1.1); } to { transform: scale(1.2); } }
         @keyframes float-up { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         .animate-float-up { animation: float-up 1s ease-out forwards; animation-delay: 0.5s; opacity: 0; }
+        
+        /* Gradient Text Animasyonu */
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradientMove 5s ease infinite;
+        }
+        @keyframes gradientMove {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
       `}</style>
     </div>
   )

@@ -20,7 +20,7 @@ export default function Technologies() {
         
         <div className="container mx-auto px-6 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-blue-400/30 bg-blue-500/5 mb-6">
-            <span className="text-xs font-mono text-blue-400 tracking-widest uppercase">Driver Application V1.0</span>
+            <span className="text-xs font-mono text-blue-400 tracking-widest uppercase">Drıver Applıcatıon V1.0</span>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
@@ -127,7 +127,7 @@ export default function Technologies() {
 
             {/* SAĞ: ÖZELLİK ANLATIMI (FOTOĞRAFLI - EMOJİSİZ) */}
             <div className="lg:w-2/5 space-y-6">
-              <h3 className="text-3xl font-bold text-white mb-8">Operasyonun Kalbi.</h3>
+              <h3 className="text-3xl font-bold text-white mb-8">OPERASYONUN KALBİ</h3>
               
               {/* Kart 1: Asistan */}
               <div className="group relative rounded-xl overflow-hidden p-6 border border-slate-700 hover:border-cyan-500/50 transition duration-500 h-32 flex items-center">
