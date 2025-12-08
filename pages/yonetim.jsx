@@ -13,6 +13,7 @@ export default function Yonetim() {
   const [jobs, setJobs] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [requests, setRequests] = useState([]); 
+  const [events, setEvents] = useState([]); // YENİ: Canlı Olay Akışı için
 
   // --- İSTATİSTİKLER ---
   const [stats, setStats] = useState({
@@ -68,10 +69,20 @@ export default function Yonetim() {
       setStats(prev => ({ ...prev, pendingRequests: pending.length }));
     });
 
+    // 4. YENİ: Canlı Olay Akışı (Events)
+    const unsubEvents = onSnapshot(collection(db, "events"), (snapshot) => {
+      const eventData = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)) // En yeni en üste
+        .slice(0, 10); // Sadece son 10 olay
+      setEvents(eventData);
+    });
+
     return () => {
       unsubJobs();
       unsubTrucks();
       unsubRequests();
+      unsubEvents(); // Temizlik
     };
   }, [isAuthenticated]);
 
@@ -127,7 +138,6 @@ export default function Yonetim() {
 
       <main 
         className="flex-grow container mx-auto px-4 flex justify-center items-start"
-        // Navbar'dan iyice uzaklaştırdık (180px)
         style={{ paddingTop: '180px', paddingBottom: '50px' }}
       >
         
@@ -136,7 +146,6 @@ export default function Yonetim() {
           <div className="bg-[#112240] p-10 rounded-2xl shadow-2xl w-full max-w-md text-center border border-slate-700 mt-10 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-red-500"></div>
             <div className="flex justify-center mb-6">
-                {/* Kilit İkonu SVG */}
                 <svg className="w-16 h-16 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
             <h2 className="text-xl font-bold text-white mb-2 tracking-widest uppercase">Komuta Merkezi</h2>
@@ -159,7 +168,7 @@ export default function Yonetim() {
           /* --- ANA PANEL --- */
           <div className="w-full max-w-7xl animate-fade-in-up">
             
-            {/* ÜST DASHBOARD KARTLARI (EMOJİSİZ - PROFESYONEL SVG) */}
+            {/* ÜST DASHBOARD KARTLARI */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               
               {/* KART 1: CİRO */}
@@ -223,7 +232,54 @@ export default function Yonetim() {
 
             </div>
 
-            {/* SEKMELER (BUTONLAR KÜÇÜLTÜLDÜ VE EMOJİSİZ) */}
+            {/* --- YENİ EKLENEN: CANLI OPERASYON TERMİNALİ (MATRIX LOG) --- */}
+            <div className="mb-8 bg-[#0d1b2a] border border-slate-700/50 rounded-xl overflow-hidden shadow-2xl">
+              <div className="bg-[#1b263b] px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-mono font-bold text-green-400 tracking-widest uppercase">Canlı Veri Akışı (Live Stream)</span>
+                </div>
+                <span className="text-[10px] text-slate-500 font-mono">ENCRYPTED CONNECTION</span>
+              </div>
+              
+              <div className="p-4 max-h-48 overflow-y-auto font-mono text-xs space-y-3 custom-scrollbar">
+                {events.length === 0 ? (
+                  <p className="text-slate-600 italic">Sistem dinlemede... Veri bekleniyor...</p>
+                ) : (
+                  events.map((ev) => (
+                    <div key={ev.id} className="flex items-start gap-3 border-b border-slate-800/50 pb-2 last:border-0 last:pb-0 animate-fade-in-up">
+                      <span className="text-slate-500 shrink-0">
+                        {ev.createdAt ? new Date(ev.createdAt.seconds * 1000).toLocaleTimeString('tr-TR') : '--:--'}
+                      </span>
+                      
+                      <div className="flex-1">
+                        <span className="text-orange-500 font-bold mr-2">[{ev.truckId || 'SİSTEM'}]</span>
+                        <span className="text-slate-300">
+                          {ev.status === 'GOING_TO_PICKUP' && 'Yük kabul edildi. Rota oluşturuluyor.'}
+                          {ev.status === 'FULL' && 'Yükleme tamamlandı. Teslimat noktasına gidiyor.'}
+                          {ev.status === 'EMPTY' && 'Görev tamamlandı. Araç boşa çıktı.'}
+                          {ev.status === 'SOS' && 'ACİL DURUM SİNYALİ!'}
+                        </span>
+                        
+                        {/* Sigorta ve Fatura Bilgisi */}
+                        {ev.policyNo && (
+                          <div className="mt-1 flex items-center gap-2">
+                             <span className="bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded border border-green-500/20 text-[9px]">
+                               ✅ Sigorta: {ev.policyNo}
+                             </span>
+                             <span className="bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20 text-[9px]">
+                               📄 {ev.invoiceStatus || 'Fatura Kesildi'}
+                             </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* SEKMELER */}
             <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-1">
               <button 
                 onClick={() => setActiveTab('jobs')}
@@ -363,7 +419,7 @@ export default function Yonetim() {
   );
 }
 
-// Boş Durum Bileşeni (Görseli güncellendi)
+// Boş Durum Bileşeni
 function EmptyState({ msg }) {
   return (
     <div className="flex flex-col items-center justify-center h-48 text-slate-600 border border-dashed border-slate-800 rounded-lg">

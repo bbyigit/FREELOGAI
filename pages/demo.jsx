@@ -25,7 +25,7 @@ const LIGHT_MAP_STYLE = [
 ];
 
 // Google Maps API Anahtarın
-const GOOGLE_MAPS_API_KEY = "AIzaSyDPh0Z89MVbMU1_heWaHotFHh5pH7RCEnM"; // Buraya kendi keyini koydugundan emin ol
+const GOOGLE_MAPS_API_KEY = "AIzaSyA5U4UUjpet8KkN1S4R1LjAEtHp9PH2uWI"; 
 
 export default function Demo() {
   // --- STATE ---
@@ -39,8 +39,8 @@ export default function Demo() {
   const [isSimulating, setIsSimulating] = useState(false);
 
   // Referanslar
-  const mapRef = useRef(null) // HTML Div Referansı
-  const mapInstance = useRef(null) // Google Map Objesi
+  const mapRef = useRef(null) 
+  const mapInstance = useRef(null) 
   const markers = useRef({})
   const demoMarker = useRef(null) 
   const poiMarkers = useRef([])
@@ -49,11 +49,9 @@ export default function Demo() {
   const directionsRenderer = useRef(null)
   const simulationInterval = useRef(null)
 
-  // --- HARİTA YÜKLEME (SAĞLAMLAŞTIRILMIŞ VERSİYON) ---
+  // --- HARİTA YÜKLEME ---
   useEffect(() => {
-    // 1. Harita Kurulum Fonksiyonu
     const initializeMap = () => {
-      // Eğer Div yoksa veya Harita zaten kuruluysa dur.
       if (!mapRef.current || mapInstance.current) return;
 
       try {
@@ -71,31 +69,22 @@ export default function Demo() {
           polylineOptions: { strokeColor: "#f97316", strokeWeight: 5 }
         });
 
-        // Firebase dinlemeyi başlat
         listenToFirebase();
       } catch (error) {
         console.error("Harita başlatılırken hata oluştu:", error);
       }
     };
 
-    // 2. Script Kontrolü ve Yükleme (Singleton Pattern)
     const loadScript = () => {
-      // A. Script zaten varsa ve Google objesi yüklendiyse direkt başlat
       if (window.google && window.google.maps) {
         initializeMap();
         return;
       }
-
-      // B. Script tag'i sayfada var mı kontrol et
       const existingScript = document.getElementById('googleMapsScript');
-      
       if (existingScript) {
-        // Script var ama belki henüz yüklenmedi, listener ekle
         existingScript.addEventListener('load', initializeMap);
         return;
       }
-
-      // C. Script yoksa sıfırdan oluştur ve ekle
       const script = document.createElement('script');
       script.id = 'googleMapsScript';
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
@@ -103,22 +92,16 @@ export default function Demo() {
       script.defer = true;
       script.onload = initializeMap;
       script.onerror = () => console.error("Google Maps Script yüklenemedi.");
-      
       document.body.appendChild(script);
     };
 
-    // İşlemi Başlat
     loadScript();
 
-    // 3. Cleanup (Sayfadan çıkarken yapılacaklar)
     return () => {
-      // Scripti SİLMİYORUZ (Sayfa değişimlerinde tekrar indirmesin diye)
-      // Sadece interval ve instance temizliği
       if (simulationInterval.current) clearInterval(simulationInterval.current);
-      // Map instance'ı null yapıyoruz ki geri gelince tekrar oluşturabilsin
       mapInstance.current = null; 
     };
-  }, []); // Boş dependency array -> Sadece mount anında çalışır.
+  }, []); 
 
   // --- TEMA DEĞİŞİMİ ---
   useEffect(() => {
@@ -133,9 +116,9 @@ export default function Demo() {
     setIsSimulating(true);
     
     const points = {
-        start: { lat: 41.0082, lng: 28.9784 }, // İstanbul
-        pickup: { lat: 40.8028, lng: 29.4307 }, // Gebze
-        dest: { lat: 39.9334, lng: 32.8597 }    // Ankara
+        start: { lat: 41.0082, lng: 28.9784 }, 
+        pickup: { lat: 40.8028, lng: 29.4307 }, 
+        dest: { lat: 39.9334, lng: 32.8597 }    
     };
 
     if(mapInstance.current) {
@@ -167,7 +150,6 @@ export default function Demo() {
 
   const animateTruckOnPath = (path) => {
     if(demoMarker.current) demoMarker.current.setMap(null);
-    
     const demoId = "DEMO-34TR100";
     
     demoMarker.current = new google.maps.Marker({
@@ -195,7 +177,9 @@ export default function Demo() {
         pickupName: "Gebze Lojistik Depo",
         destinationName: "Ankara Merkez Depo",
         driverName: "Sistem Test Pilotu",
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        policyNo: "TR-DEMO-999",
+        invoiceStatus: "ONAYLANDI"
     }, "YÜKE GİDİYOR");
 
     simulationInterval.current = setInterval(() => {
@@ -203,15 +187,12 @@ export default function Demo() {
             endSimulation();
             return;
         }
-
         const pos = path[step];
         const nextPos = path[step + 1]; 
-        
         let heading = 0;
         if (window.google && window.google.maps.geometry) {
             heading = google.maps.geometry.spherical.computeHeading(pos, nextPos);
         }
-
         const progress = step / totalSteps;
 
         if (progress < 0.2) {
@@ -247,7 +228,6 @@ export default function Demo() {
                 statusLabel: statusLabel
             }));
         }
-
         step++;
     }, 100); 
   };
@@ -321,7 +301,7 @@ export default function Demo() {
         }
       })
     })
-    return () => unsubscribe() // Bu unsubscribe fonksiyonu useEffect içinde değil, çağırıldığı yerde yönetilmeli
+    return () => unsubscribe() 
   }
 
   // --- ARAMA İŞLEVİ ---
@@ -429,7 +409,6 @@ export default function Demo() {
     }
   }
 
-  // --- ROTA & POI YARDIMCILARI ---
   const clearRouteAndPois = () => {
     if (directionsRenderer.current) directionsRenderer.current.setDirections({ routes: [] });
     poiMarkers.current.forEach(m => m.setMap(null));
@@ -477,7 +456,6 @@ export default function Demo() {
     <div className={`flex flex-col h-screen font-sans transition-colors duration-500 ${bgClass}`}>
       <Head>
         <title>Canlı İzleme | Freelog</title>
-        {/* SCRIPT TAG'ini BURADAN KALDIRDIK. KOD İLE EKLİYORUZ. */}
       </Head>
 
       <div className={`absolute top-0 w-full z-[200] border-b backdrop-blur-md transition-colors duration-500 ${isDarkMode ? 'bg-[#0a192f]/90 border-white/5' : 'bg-white/90 border-slate-200'}`}>
@@ -555,6 +533,39 @@ export default function Demo() {
                     <span className="text-[10px] uppercase opacity-70">Hız</span>
                     <span className="font-bold text-base">{selectedTruck.speed ? selectedTruck.speed.toFixed(1) : 0} <span className="text-[10px] font-normal opacity-70">KM/S</span></span>
                   </div>
+
+                  {/* --- YENİ EKLENEN: FİNANSAL GÜVEN ROZETİ --- */}
+                  {selectedTruck.policyNo && (
+                    <div className="mt-3 relative overflow-hidden rounded-lg border border-emerald-500/30 bg-gradient-to-r from-emerald-900/40 to-[#0a192f] p-3 animate-pulse-slow">
+                      
+                      {/* Arka Plan Efekti */}
+                      <div className="absolute -right-4 -top-4 bg-emerald-500/20 w-12 h-12 rounded-full blur-xl"></div>
+
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-emerald-500 text-black p-1 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                          </div>
+                          <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase">Yük Sigortalı</span>
+                        </div>
+                        <span className="text-[9px] font-bold text-emerald-600 bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-500/20">Allianz</span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center text-[9px]">
+                          <span className="text-slate-400">Poliçe No:</span>
+                          <span className="text-white font-mono tracking-wide">{selectedTruck.policyNo}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[9px]">
+                          <span className="text-slate-400">Fatura Durumu:</span>
+                          <div className="flex items-center gap-1">
+                             <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></span>
+                             <span className="text-blue-300 font-bold">{selectedTruck.invoiceStatus || "ONAYLANDI"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] uppercase opacity-70">Son Sinyal</span>
