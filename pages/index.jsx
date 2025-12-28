@@ -1,394 +1,258 @@
-import Head from 'next/head'
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import Navbar from '../components/Navbar'
-import { useRouter } from 'next/router';
-import Footer from '../components/Footer'
+import Head from 'next/head';
+import Link from 'next/link';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { useState, useEffect } from 'react';
+import { useAuthModal } from '../context/AuthModalContext';
 
 export default function Home() {
-  const [loading, setLoading] = useState(true)
-  const [progress, setProgress] = useState(0)
-  const [loadingText, setLoadingText] = useState("SİSTEM BAŞLATILIYOR...")
-  
-  // Canlı İstatistikler İçin State
-  const [stats, setStats] = useState({
-    partners: 0,
-    drivers: 0,
-    routes: 0,
-    tonnage: 0
-  });
+   const { openRegister } = useAuthModal();
+   const [stats, setStats] = useState({ drivers: 0, loads: 0, cities: 0 });
 
-  const router = useRouter(); 
-
-  // --- SİNEMATİK INTRO VE SKIP MANTIĞI ---
+  // Sayaç Animasyonu (Basit Simülasyon)
   useEffect(() => {
-    if (!router.isReady) return;
-
-    if (router.query.skip === 'true') {
-      setLoading(false);
-      return;
-    }
-
-    const texts = [
-      "UYDU BAĞLANTISI KURULUYOR...",
-      "VERİ TABANI SENKRONİZE EDİLİYOR...",
-      "ROTA ALGORİTMALARI YÜKLENİYOR...",
-      "SÜRÜCÜ ARAYÜZLERİ AKTİF...",
-      "GÜVENLİK PROTOKOLLERİ HAZIR..."
-    ]
-
-    let step = 0;
     const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setTimeout(() => setLoading(false), 800)
-          return 100
-        }
-        if (prev % 20 === 0 && step < texts.length) {
-          setLoadingText(texts[step])
-          step++
-        }
-        return prev + 2
-      })
-    }, 40)
-
-    return () => clearInterval(interval)
-  }, [router.isReady, router.query])
-
-  // --- İSTATİSTİK SAYACI EFEKTİ (Intro bittikten sonra çalışır) ---
-  useEffect(() => {
-    if (loading) return;
-
-    // Hedef Sayılar
-    const targets = { partners: 42, drivers: 850, routes: 12400, tonnage: 35000 };
-    
-    const duration = 2000; // 2 saniyede tamamlansın
-    const steps = 50; 
-    const intervalTime = duration / steps;
-    let currentStep = 0;
-
-    const timer = setInterval(() => {
-      currentStep++;
-      const progress = currentStep / steps; // 0.0 -> 1.0
-
-      // Easing fonksiyonu (yavaşça durması için)
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-
-      setStats({
-        partners: Math.floor(targets.partners * easeOut),
-        drivers: Math.floor(targets.drivers * easeOut),
-        routes: Math.floor(targets.routes * easeOut),
-        tonnage: Math.floor(targets.tonnage * easeOut)
-      });
-
-      if (currentStep >= steps) clearInterval(timer);
-    }, intervalTime);
-
-    return () => clearInterval(timer);
-  }, [loading]);
-
-
-  // --- INTRO EKRANI ---
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-[#0a192f] z-[100] flex flex-col items-center justify-center font-mono text-orange-500">
-        
-        <div className="mb-6 relative animate-pulse">
-           <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-20 rounded-full"></div>
-           <img 
-              src="/images/logo.png" 
-              alt="Freelog Logo" 
-              className="w-44 h-auto relative z-10 drop-shadow-2xl" 
-           />
-        </div>
-        
-        <div className="w-80 h-1 bg-slate-800 rounded-full overflow-hidden relative border border-slate-700">
-          <div 
-            className="h-full bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-400 shadow-[0_0_20px_rgba(249,115,22,1)] transition-all duration-75 ease-out"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        
-        <div className="mt-4 flex justify-between w-80 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-          <span className="animate-pulse">{loadingText}</span>
-          <span className="text-orange-500">%{progress}</span>
-        </div>
-      </div>
-    )
-  }
-
-  // Sayı Formatlayıcı (12.400 gibi)
-  const formatNum = (num) => new Intl.NumberFormat('tr-TR').format(num);
+      setStats(prev => ({
+        drivers: prev.drivers < 850 ? prev.drivers + 17 : 850,
+        loads: prev.loads < 1240 ? prev.loads + 24 : 1240,
+        cities: 81
+      }));
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0a192f] font-sans text-slate-200 selection:bg-orange-500 selection:text-white overflow-x-hidden">
       <Head>
-        <title>Freelog AI | Geleceğin Lojistiği</title>
-        <meta name="description" content="Yapay Zeka Destekli Otonom Lojistik" />
+        <title>Freelog AI | Lojistiğin Dijital Omurgası</title>
+        <meta name="description" content="Yük verenler ve sürücüler için yapay zeka destekli yeni nesil lojistik platformu." />
       </Head>
 
-      <div className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0a192f]/90 backdrop-blur-md">
-        <Navbar />
-      </div>
+      <Navbar />
 
-      {/* --- HERO SECTION --- */}
-      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20">
-        
-        <div className="absolute inset-0 z-0">
-          {/* HERO ARKAPLAN GÖRSELİ */}
-          <img 
-            src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop" 
-            alt="AI Tech Background" 
-            className="w-full h-full object-cover opacity-10 scale-110 animate-slow-zoom" 
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f] via-transparent to-[#0a192f]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0a192f_100%)]"></div>
-        </div>
+      {/* --- HERO SECTION (ANA GİRİŞ) --- */}
+      <header className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        {/* Arka Plan Efektleri */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none opacity-50"></div>
+        <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-orange-500/10 blur-[100px] rounded-full pointer-events-none opacity-30"></div>
 
-        <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
+        <div className="container mx-auto px-6 relative z-10 text-center">
           
-          {/* Rozeti biraz aşağı kaydırdık (mt-12) */}
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-orange-500/20 bg-orange-500/5 backdrop-blur-md mb-8 mt-12 animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 mb-8 animate-fade-in-down">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
             </span>
-            <span className="text-xs font-bold text-orange-400 tracking-[0.2em] uppercase">Canlı Veri Akışı Aktif</span>
+            <span className="text-xs font-bold text-blue-400 tracking-[0.2em] uppercase">Donanım & Yazılım Bütünleşik Çözüm</span>
           </div>
 
-          <h1 className="text-5xl md:text-8xl font-black text-white leading-tight mb-8 tracking-tight animate-fade-in-up delay-100">
-            SAHADAN MERKEZE <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600 animate-gradient">
-              DİJİTAL AKIŞ
-            </span>
+          <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-8 tracking-tight drop-shadow-2xl">
+            FREELOG <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">AKILLI</span> TAŞIMA
           </h1>
 
-          <p className="text-lg md:text-2xl text-slate-400 max-w-3xl mx-auto mb-10 font-light leading-relaxed animate-fade-in-up delay-200">
-            Gerçek zamanlı veri, tam görünürlük ve uçtan uca <strong className="text-white">lojistik orkestrasyonu.</strong><br/>
-            Kaosu matematiğe çeviriyoruz.
+          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12">
+            Sürücülerimize özel geliştirdiğimiz <strong>Freelog Tablet</strong> ile 
+            navigasyon, yük bulma ve iletişim tek ekranda. Telefon karmaşasına son.
           </p>
 
-          {/* BUTON */}
-          <div className="flex justify-center mb-16 animate-fade-in-up delay-300">
-            <Link href="/demo" className="group relative w-72 h-16 bg-gradient-to-r from-orange-700 to-orange-600 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(234,88,12,0.4)] hover:shadow-[0_0_50px_rgba(234,88,12,0.7)] transition-all duration-500">
-              <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)] animate-slide-bg"></div>
-              <div className="absolute top-0 -left-full w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg] animate-shine"></div>
-              <div className="relative h-full flex items-center justify-between px-6 z-10">
-                <span className="font-bold text-white tracking-widest text-sm group-hover:text-orange-100 transition-colors">
-                  SİSTEMİ BAŞLAT
-                </span>
-                <div className="relative w-8 h-8 text-white group-hover:translate-x-2 transition-transform duration-300">
-                   <div className="absolute top-1/2 -left-4 w-6 h-[2px] bg-orange-300 rounded-full opacity-0 group-hover:opacity-100 group-hover:-translate-x-2 transition-all duration-500"></div>
-                   <div className="absolute top-1/3 -left-6 w-4 h-[1px] bg-orange-300 rounded-full opacity-0 group-hover:opacity-70 group-hover:-translate-x-3 transition-all duration-700"></div>
-                   <svg className="w-full h-full drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" fill="currentColor" viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
-                </div>
-              </div>
-            </Link>
-          </div>
-
-          {/* --- YENİ EKLENEN CANLI İSTATİSTİK SATIRI --- */}
-          <div className="w-full max-w-5xl animate-fade-in-up delay-500">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-t border-white/10 pt-8 pb-4">
-               
-               {/* Stat 1 */}
-               <div className="flex flex-col items-center group cursor-default">
-                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-orange-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
-                     {formatNum(stats.partners)}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Lojistik Partneri</div>
-               </div>
-
-               {/* Stat 2 */}
-               <div className="flex flex-col items-center group cursor-default border-l border-white/5">
-                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-blue-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
-                     {formatNum(stats.drivers)}+
-                  </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Aktif Sürücü</div>
-               </div>
-
-               {/* Stat 3 */}
-               <div className="flex flex-col items-center group cursor-default border-l border-white/5">
-                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-green-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
-                     {formatNum(stats.routes)}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Tamamlanan Rota</div>
-               </div>
-
-               {/* Stat 4 */}
-               <div className="flex flex-col items-center group cursor-default border-l border-white/5">
-                  <div className="text-3xl md:text-4xl font-mono font-bold text-white group-hover:text-purple-400 transition-colors drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
-                     {formatNum(stats.tonnage)}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-2">Anlık Yük (Ton)</div>
-               </div>
-
-            </div>
-          </div>
-
-        </div>
-        
-        {/* Alt Fade Efekti */}
-        <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-[#0a192f] to-transparent z-20"></div>
-      </section>
-
-      {/* --- PROJENİN GERÇEK GÜÇLERİ (FOTOĞRAFLI KARTLAR) --- */}
-      <section className="py-24 bg-[#0a192f] relative">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-12">
+            {/* --- CTA BUTONLARI (GÜNCELLENDİ: MODAL AÇIYOR) --- */}
+          <div className="flex flex-col md:flex-row justify-center gap-6 mb-16">
             
-            {/* KART 1: GERÇEK ZAMANLI VERİ */}
-            <div className="group relative p-1 rounded-2xl bg-gradient-to-b from-white/10 to-transparent hover:from-orange-500/50 transition duration-500 h-full">
-              <div className="bg-[#112240] p-8 rounded-xl h-full relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=2070&auto=format&fit=crop" 
-                  alt="Data Highway Speed" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity duration-500"
-                />
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-t from-[#112240] via-[#112240]/80 to-orange-900/10"></div>
-                
-                <div className="relative z-10">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span className="text-3xl text-orange-500 drop-shadow-[0_0_10px_rgba(249,115,22,0.5)]">⚡</span>
-                    Milisaniyelik Senkronizasyon
-                  </h3>
-                  <p className="text-slate-400 leading-relaxed text-sm">
-                    Konvansiyonel GPS'in aksine; Freelog NoSQL mimarisiyle araç konumunu, yük durumunu (Dolu/Boş) ve sensör verilerini <span className="text-orange-400 font-bold">canlı yayın hızında</span> merkeze işler.
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/* KURUMSAL BUTON */}
+            <button 
+              onClick={openRegister}
+              className="group relative px-8 py-5 bg-white text-[#0a192f] rounded-2xl font-black text-lg shadow-xl shadow-white/10 hover:shadow-white/20 transition transform hover:-translate-y-1 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-slate-200 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              <span className="relative flex items-center gap-3">
+                🏢 YÜK VERENİM
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+              </span>
+            </button>
 
-            {/* KART 2: OTONOM İŞ AKIŞI */}
-            <div className="group relative p-1 rounded-2xl bg-gradient-to-b from-white/10 to-transparent hover:from-blue-500/50 transition duration-500 h-full">
-              <div className="bg-[#112240] p-8 rounded-xl h-full relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?q=80&w=2069&auto=format&fit=crop" 
-                  alt="Digital GPS Map" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-25 group-hover:opacity-35 transition-opacity duration-500"
-                />
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-t from-[#112240] via-[#112240]/80 to-blue-900/10"></div>
-
-                <div className="relative z-10">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span className="text-3xl text-blue-500 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">🗺️</span>
-                    Otonom Rota ve İş Akışı
-                  </h3>
-                  <p className="text-slate-400 leading-relaxed text-sm">
-                    Manuel telefon trafiği bitti. Yük havuzundan seçilen iş, saniyeler içinde sürücü tabletine düşer ve Google Maps API üzerinden <span className="text-blue-400 font-bold">en optimize rota</span> otomatik çizilir.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* KART 3: SAHA ASİSTANI */}
-            <div className="group relative p-1 rounded-2xl bg-gradient-to-b from-white/10 to-transparent hover:from-indigo-500/50 transition duration-500 h-full">
-              <div className="bg-[#112240] p-8 rounded-xl h-full relative overflow-hidden">
-                <img 
-                  src="https://images.unsplash.com/photo-1605280263929-1c42c62ef169?q=80&w=2070&auto=format&fit=crop" 
-                  alt="Truck Driver Cockpit" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity duration-500"
-                />
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-t from-[#112240] via-[#112240]/80 to-indigo-900/10"></div>
-
-                <div className="relative z-10">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-                    <span className="text-3xl text-indigo-500 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]">👩🏻</span>
-                    Proaktif Saha Asistanı
-                  </h3>
-                  <p className="text-slate-400 leading-relaxed text-sm">
-                    Sürücü dikkati yolda kalmalı. Text-to-Speech motorumuz sürücüyü sesli yönlendirir, tek tuşla durum bildirimi sayesinde operasyonel <span className="text-indigo-400 font-bold">iş yükü %80 azalır.</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
+            {/* SÜRÜCÜ BUTONU */}
+            <button 
+              onClick={openRegister}
+              className="group relative px-8 py-5 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-orange-900/40 hover:shadow-orange-900/60 transition transform hover:-translate-y-1"
+            >
+              <span className="relative flex items-center gap-3">
+                🚛 SÜRÜCÜYÜM
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+              </span>
+            </button>
           </div>
+
+          {/* SAYAÇLAR */}
+          <div className="grid grid-cols-3 gap-4 md:gap-12 border-t border-white/5 pt-12 max-w-4xl mx-auto">
+             <div>
+                <div className="text-3xl md:text-5xl font-mono font-bold text-white mb-2">{stats.drivers}+</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Dağıtılan Tablet</div>
+             </div>
+             <div className="border-x border-white/5 px-4">
+                <div className="text-3xl md:text-5xl font-mono font-bold text-orange-500 mb-2">{stats.loads}</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Anlık Sinyal</div>
+             </div>
+             <div>
+                <div className="text-3xl md:text-5xl font-mono font-bold text-blue-500 mb-2">{stats.cities}</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Kapsama Alanı</div>
+             </div>
+          </div>
+
         </div>
-      </section>
+      </header>
 
-      {/* --- TABLET KISMI --- */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop" 
-            alt="Global Network Map Night" 
-            className="w-full h-full object-cover opacity-40 scale-125" 
-          />
-           <div className="absolute inset-0 bg-gradient-to-r from-[#0a192f] via-[#0a192f]/60 to-[#0a192f]/90"></div>
-        </div>
+      {/* --- TABLET / KIOSK TANITIM BÖLÜMÜ (YENİLENMİŞ) --- */}
+      <section className="py-24 bg-[#112240] border-y border-slate-700 relative overflow-hidden">
+         <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center relative z-10">
+            
+            {/* SOL: METİN ALANI */}
+            <div className="space-y-8">
+               <div className="inline-block bg-blue-600/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-lg border border-blue-500/30">
+                  📟 FREELOG PAD v2.0
+               </div>
+               <h2 className="text-3xl md:text-5xl font-bold text-white leading-tight">
+                  Sürücüler İçin Hazır <br/>
+                  <span className="text-slate-400">Akıllı Kokpit Deneyimi.</span>
+               </h2>
+               <p className="text-slate-400 text-lg leading-relaxed">
+                  Kendi telefonunuzu yormayın, şarjını bitirmeyin. Freelog'a kayıtlı her araca
+                  özel <strong>Tablet</strong> entegre ediyoruz. Radar sistemiyle 250 km çapındaki yükleri 
+                  anlık tarayın, navigasyonla hedefe kilitlenin.
+               </p>
+               
+               <ul className="space-y-4 mt-4">
+                  <li className="flex items-center gap-3 text-slate-300">
+                     <div className="w-6 h-6 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center text-xs">✓</div>
+                     <span>7/24 Canlı Destek Bağlantısı</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                     <div className="w-6 h-6 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center text-xs">✓</div>
+                     <span>Özelleştirilmiş Kamyon Navigasyonu</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-300">
+                     <div className="w-6 h-6 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center text-xs">✓</div>
+                     <span>Tek Tuşla Yük Kabul & Dijital İmza</span>
+                  </li>
+               </ul>
 
-        <div className="container mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center gap-16">
-           <div className="md:w-1/2">
-              <h2 className="text-4xl font-bold mb-6">Arayüz Değil, <br/><span className="text-orange-500">Yol Arkadaşı.</span></h2>
-              <p className="text-slate-400 text-lg leading-relaxed mb-8">
-                Karmaşık paneller mühendisler içindir. Sürücülerimiz için; dikkat dağıtmayan, sesle yönetilen ve proaktif bir asistan tasarladık.
-              </p>
-              
-              <div className="pl-6 border-l-2 border-orange-500 space-y-4">
-                <div className="text-sm text-slate-300">
-                  <strong className="block text-white mb-1 text-lg">Text-to-Speech Motoru</strong>
-                  Sürücü gözünü yoldan ayırmadan talimatları dinler.
-                </div>
-                <div className="text-sm text-slate-300">
-                  <strong className="block text-white mb-1 text-lg">Otonom Durum Algılama</strong>
-                  Araç hedefe vardığında sistem bunu GPS'ten anlar, manuel müdahaleyi sıfıra indirir.
-                </div>
-              </div>
-           </div>
+               <div className="pt-4">
+                   <div className="text-xs text-slate-500 font-bold uppercase mb-2">PARTNER ÜRETİCİLER</div>
+                   <div className="flex gap-4 opacity-50 grayscale hover:grayscale-0 transition duration-500">
+                       <span className="text-xl font-black text-white">SAMSUNG</span>
+                       <span className="text-xl font-black text-white">?</span>
+                   </div>
+               </div>
+            </div>
 
-           <div className="md:w-1/2 relative">
-             {/* TABLET ÇERÇEVESİ */}
-             <div className="relative rounded-xl overflow-hidden border-[8px] border-slate-800 shadow-2xl bg-black transform rotate-2 hover:rotate-0 transition duration-700">
-               <div className="aspect-video bg-[#0a192f] relative p-4 flex flex-col justify-between overflow-hidden">
-                  <div className="absolute inset-0 opacity-40 bg-[url('https://api.mapbox.com/styles/v1/mapbox/dark-v10/static/29.0,41.0,10,0/800x600?access_token=YOUR_TOKEN')] bg-cover grayscale"></div>
+            {/* SAĞ: TABLET MOCKUP (GÖRSELDEKİ GİBİ YATAY) */}
+            <div className="relative flex justify-center lg:justify-end">
+               <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+               
+               {/* TABLET ÇERÇEVESİ (CSS İLE ÇİZİM) */}
+               <div className="relative w-[600px] h-[380px] bg-black rounded-[2rem] border-[12px] border-slate-800 shadow-2xl shadow-blue-900/50 overflow-hidden transform rotate-1 hover:rotate-0 transition duration-700">
                   
-                  <div className="flex justify-between items-center relative z-10">
-                    <div className="bg-[#112240]/90 backdrop-blur px-3 py-1 rounded-full text-[10px] text-green-400 border border-green-500/30 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> ONLINE
-                    </div>
-                    <div className="text-xs font-bold text-white">34 AB 123</div>
-                  </div>
+                  {/* Kamera Deliği */}
+                  <div className="absolute top-1/2 left-2 -translate-y-1/2 w-2 h-2 bg-slate-700 rounded-full z-20"></div>
 
-                  <div className="absolute top-1/2 left-1/4 w-1/2 h-1 bg-slate-700 rounded overflow-hidden">
-                    <div className="h-full bg-orange-500 w-full animate-progress-loading"></div>
-                  </div>
+                  {/* EKRAN İÇERİĞİ */}
+                  <div className="w-full h-full bg-[#0f172a] relative flex">
+                     
+                     {/* SOL MENÜ (RADAR AYARLARI) - GÖRSELDEKİ GİBİ */}
+                     <div className="w-24 bg-[#0a1420]/90 backdrop-blur border-r border-white/5 flex flex-col items-center py-6 gap-6 z-10 relative">
+                        <div className="w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-orange-900/50">
+                            Radar
+                        </div>
+                        
+                        {/* MESAFE SLIDER GÖRÜNÜMÜ */}
+                        <div className="flex-1 w-12 bg-slate-800/50 rounded-full py-2 flex flex-col justify-between items-center relative">
+                            {/* Seçili Olan */}
+                            <div className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center text-[10px] font-bold z-10 shadow-lg">
+                                25 km
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-slate-700/50 text-slate-400 flex items-center justify-center text-[9px]">50</div>
+                            <div className="w-8 h-8 rounded-full bg-slate-700/50 text-slate-400 flex items-center justify-center text-[9px]">100</div>
+                            <div className="w-8 h-8 rounded-full bg-slate-700/50 text-slate-400 flex items-center justify-center text-[9px]">250</div>
+                            
+                            {/* Çizgi */}
+                            <div className="absolute top-2 bottom-2 w-0.5 bg-slate-600 z-0"></div>
+                        </div>
 
-                  <div className="bg-white/10 backdrop-blur border-l-4 border-orange-500 p-3 rounded relative z-10 animate-float-up">
-                    <h4 className="text-white font-bold text-sm">Rota Güncellendi</h4>
-                    <p className="text-[10px] text-slate-300">Trafik yoğunluğu algılandı. Alternatif rota oluşturuldu.</p>
+                        <div className="text-[8px] text-slate-500 font-bold uppercase rotate-180" style={{writingMode: 'vertical-rl'}}>
+                           MENZİL AYARI
+                        </div>
+                     </div>
+
+                     {/* HARİTA ALANI (SAĞ TARAF) */}
+                     <div className="flex-1 relative bg-slate-800 overflow-hidden group">
+                        {/* Harita Arka Planı (Temsili Görsel veya Renk) */}
+                        <div className="absolute inset-0 bg-[#3b82f6]/10">
+                            {/* Temsili Harita Çizgileri */}
+                            <svg className="absolute w-full h-full opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <path d="M0 20 Q 50 10 100 30" stroke="white" strokeWidth="0.5" fill="none"/>
+                                <path d="M10 0 Q 30 50 20 100" stroke="white" strokeWidth="0.5" fill="none"/>
+                                <path d="M60 0 Q 70 50 90 100" stroke="white" strokeWidth="0.5" fill="none"/>
+                                <path d="M0 80 Q 50 60 100 90" stroke="white" strokeWidth="0.5" fill="none"/>
+                            </svg>
+                        </div>
+
+                        {/* KONUM NOKTASI (RADAR MERKEZİ) */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                            <div className="relative">
+                                <div className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white shadow-xl z-20 relative"></div>
+                                {/* Radar Dalgası Animasyonu */}
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-orange-500/30 rounded-full animate-ping"></div>
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-orange-500/10 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        {/* YÜK NOKTALARI (Temsili) */}
+                        <div className="absolute top-1/3 left-2/3 w-8 h-8 bg-white text-blue-900 rounded-lg shadow-lg flex items-center justify-center text-xs font-bold animate-bounce cursor-pointer hover:scale-110 transition">
+                            📦
+                        </div>
+                        <div className="absolute bottom-1/4 left-1/3 w-8 h-8 bg-white text-blue-900 rounded-lg shadow-lg flex items-center justify-center text-xs font-bold cursor-pointer hover:scale-110 transition">
+                            📦
+                        </div>
+
+                        {/* ÜST BİLGİ ÇUBUĞU */}
+                        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur px-3 py-1 rounded text-[10px] text-white border border-white/10">
+                           ● CANLI: İSTANBUL
+                        </div>
+                     </div>
                   </div>
                </div>
-             </div>
-           </div>
-        </div>
+               
+               {/* YANSIMA EFEKTİ */}
+               <div className="absolute -bottom-10 w-[500px] h-10 bg-black/50 blur-xl rounded-[100%]"></div>
+            </div>
+
+         </div>
+      </section>
+
+      {/* --- AVANTAJLAR --- */}
+      <section className="py-20 container mx-auto px-6">
+         <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-white">Neden Freelog?</h2>
+            <p className="text-slate-400">Geleneksel lojistiği teknolojiyle yeniden yazdık.</p>
+         </div>
+         
+         <div className="grid md:grid-cols-3 gap-8">
+            <FeatureCard icon="🚀" title="Donanım Destekli" desc="Size verdiğimiz tablet ile işinizi yönetin. Telefonunuz şahsi kalsın." />
+            <FeatureCard icon="🛡️" title="Sigortalı Taşıma" desc="Tüm taşımalar X Sigorta güvencesiyle koruma altında." />
+            <FeatureCard icon="💰" title="Garantili Ödeme" desc="Teslimat onayı verildiği an ödemeniz hesabınızda." />
+         </div>
       </section>
 
       <Footer />
-
-      <style jsx global>{`
-        @keyframes shine { 0% { left: -100%; opacity: 0; } 50% { opacity: 0.5; } 100% { left: 200%; opacity: 0; } }
-        .animate-shine { animation: shine 3s infinite; }
-        @keyframes slide-bg { 0% { background-position: 0 0; } 100% { background-position: 40px 0; } }
-        .animate-slide-bg { animation: slide-bg 4s linear infinite; }
-        @keyframes progress-loading { 0% { width: 0%; } 100% { width: 100%; } }
-        .animate-progress-loading { animation: progress-loading 2s ease-in-out infinite; }
-        .animate-slow-zoom { animation: zoom 20s infinite alternate; }
-        @keyframes zoom { from { transform: scale(1.1); } to { transform: scale(1.2); } }
-        @keyframes float-up { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-        .animate-float-up { animation: float-up 1s ease-out forwards; animation-delay: 0.5s; opacity: 0; }
-        
-        /* Gradient Text Animasyonu */
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradientMove 5s ease infinite;
-        }
-        @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
     </div>
   )
+}
+
+function FeatureCard({ icon, title, desc }) {
+   return (
+      <div className="bg-[#112240] p-8 rounded-2xl border border-slate-700 hover:border-orange-500/50 transition group">
+         <div className="text-4xl mb-6 group-hover:scale-110 transition duration-300">{icon}</div>
+         <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
+         <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+      </div>
+   )
 }
