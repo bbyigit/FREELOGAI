@@ -57,7 +57,7 @@ export default function Yonetim() {
 
   const [activeTab, setActiveTab] = useState('dashboard'); 
 
-  // --- 1. GÜVENLİK KONTROLÜ ---
+  // --- 1. GÜVENLİK KONTROLÜ (DÜZELTİLDİ) ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -65,10 +65,12 @@ export default function Yonetim() {
         if (userDoc.exists() && userDoc.data().role === 'admin') {
            setIsAdmin(true);
         } else {
+           // Admin değilse anasayfaya
            router.push('/');
         }
       } else {
-        router.push('/giris');
+        // Oturum yoksa anasayfaya (HATA BURADAYDI)
+        router.push('/'); 
       }
       setLoading(false);
     });
