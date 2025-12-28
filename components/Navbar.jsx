@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { auth, db } from '../firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { useAuthModal } from '../context/AuthModalContext'; // <--- YENİ EKLENTİ
+import { useAuthModal } from '../context/AuthModalContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +14,7 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   
   // MERKEZİ KUMANDAYI ÇAĞIRIYORUZ
-  const { openLogin, openRegister } = useAuthModal(); 
+  const { openLogin, openRegister, closeModal } = useAuthModal(); // closeModal'ı da aldık
 
   const dropdownRef = useRef(null);
   const router = useRouter();
@@ -50,18 +50,30 @@ export default function Navbar() {
     };
   }, []);
 
+  // --- DÜZELTİLMİŞ ÇIKIŞ FONKSİYONU ---
   const handleLogout = async () => {
-    await signOut(auth);
-    setProfileOpen(false);
-    setUserRole(null);
-    router.push('/');
+    try {
+      await signOut(auth); // Firebase oturumunu kapat
+      setProfileOpen(false); // Dropdown'ı kapat
+      setUser(null); // Local user state'ini temizle
+      setUserRole(null); // Rolü temizle
+      closeModal(); // Eğer açık modal varsa kapat (Önemli!)
+      
+      // Güvenli yönlendirme: Anasayfaya git
+      router.push('/').then(() => {
+         // İsteğe bağlı: Sayfa yenileme yapabilirsin ama SPA deneyimi için gerek yok.
+         // window.location.reload(); 
+      });
+    } catch (error) {
+      console.error("Çıkış hatası:", error);
+    }
   };
 
   // Yük Veren Linkine Tıklama Kontrolü (Giriş Yoksa Modal Aç)
   const handleProtectedLink = (e, path) => {
     if (!user) {
       e.preventDefault(); 
-      openLogin(); // <--- DİREKT PENCEREYİ AÇIYORUZ
+      openLogin(); 
     }
   };
 
